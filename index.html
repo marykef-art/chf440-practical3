@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CHF 440 · Practical 3 · Wetting Behaviour of Powders</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+
+<style>
+:root {
+  --bg:       #0a0d14;
+  --panel:    #111520;
+  --border:   #1e2535;
+  --cyan:     #00e5c8;
+  --amber:    #f5a623;
+  --rose:     #ff6b8a;
+  --text:     #d8dde8;
+  --dim:      #7a8398;
+  --white:    #f0f4ff;
+  --mono:     'JetBrains Mono', monospace;
+  --serif:    'Playfair Display', serif;
+  --sans:     'DM Sans', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  overflow-x: hidden;
+}
+
+/* ─────────────── HEADER ─────────────── */
+header {
+  position: relative;
+  padding: 60px 40px 50px;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+}
+header::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(0,229,200,0.07), transparent);
+  pointer-events: none;
+}
+.badge {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  color: var(--cyan);
+  border: 1px solid rgba(0,229,200,0.3);
+  padding: 4px 12px;
+  border-radius: 2px;
+  margin-bottom: 18px;
+}
+h1 {
+  font-family: var(--serif);
+  font-size: clamp(26px, 4vw, 44px);
+  color: var(--white);
+  line-height: 1.2;
+  max-width: 700px;
+  margin: 0 auto 12px;
+}
+.subtitle {
+  font-size: 14px;
+  color: var(--dim);
+  letter-spacing: 0.04em;
+}
+
+/* ─────────────── NAV TABS ─────────────── */
+.tab-bar {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  gap: 0;
+  padding: 0 30px;
+}
+.tab {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--dim);
+  padding: 14px 22px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.tab:hover { color: var(--text); }
+.tab.active {
+  color: var(--cyan);
+  border-bottom-color: var(--cyan);
+}
+
+/* ─────────────── PANELS ─────────────── */
+.panel { display: none; padding: 40px; max-width: 1100px; margin: 0 auto; }
+.panel.active { display: block; }
+
+/* ─────────────── STEP CARDS ─────────────── */
+.steps-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  margin-top: 30px;
+}
+.step-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.2s;
+}
+.step-card:hover {
+  border-color: rgba(0,229,200,0.3);
+  transform: translateY(-2px);
+}
+.step-card.open { border-color: rgba(0,229,200,0.5); }
+.step-num {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--cyan);
+  letter-spacing: 0.15em;
+  margin-bottom: 8px;
+}
+.step-card h3 {
+  font-family: var(--serif);
+  font-size: 17px;
+  color: var(--white);
+  margin-bottom: 10px;
+}
+.step-card p {
+  font-size: 13px;
+  color: var(--dim);
+  line-height: 1.6;
+}
+.step-expand {
+  display: none;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+.step-card.open .step-expand { display: block; }
+
+/* ─────────────── SVG ANIMATION CONTAINERS ─────────────── */
+.anim-box {
+  background: #0d1018;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  margin-top: 12px;
+  min-height: 140px;
+}
+.anim-box svg { max-width: 100%; }
+
+/* ─────────────── TABLES ─────────────── */
+.data-section { margin-bottom: 40px; }
+.data-section h2 {
+  font-family: var(--serif);
+  font-size: 22px;
+  color: var(--white);
+  margin-bottom: 6px;
+}
+.section-note {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--dim);
+  margin-bottom: 20px;
+}
+.eq-box {
+  background: var(--panel);
+  border-left: 3px solid var(--cyan);
+  padding: 14px 20px;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--cyan);
+  margin: 16px 0 20px;
+  border-radius: 0 4px 4px 0;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  background: var(--panel);
+  border-radius: 4px;
+  overflow: hidden;
+}
+thead tr { background: rgba(0,229,200,0.06); }
+th {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--cyan);
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+td {
+  padding: 10px 16px;
+  border-bottom: 1px solid #161c28;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 12.5px;
+}
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(255,255,255,0.02); }
+.val-cyan { color: var(--cyan); }
+.val-amber { color: var(--amber); }
+.val-rose  { color: var(--rose); }
+.tag-p1 { 
+  background: rgba(0,229,200,0.1); 
+  color: var(--cyan); 
+  border-radius: 2px; 
+  padding: 1px 6px; 
+  font-size: 10px;
+}
+.tag-p2 { 
+  background: rgba(245,166,35,0.1); 
+  color: var(--amber); 
+  border-radius: 2px; 
+  padding: 1px 6px; 
+  font-size: 10px;
+}
+
+/* ─────────────── CHART ─────────────── */
+.chart-wrap {
+  position: relative;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 24px;
+  margin-top: 20px;
+}
+.chart-wrap canvas { max-height: 420px; }
+.chart-legend {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--dim);
+}
+.legend-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+}
+
+/* ─────────────── COMPARISON GRID ─────────────── */
+.compare-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-top: 24px;
+}
+@media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
+.compare-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 20px;
+}
+.compare-card h4 {
+  font-family: var(--serif);
+  font-size: 16px;
+  color: var(--white);
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.compare-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid #161c28;
+  font-size: 12px;
+}
+.compare-row:last-child { border-bottom: none; }
+.compare-label { color: var(--dim); font-family: var(--mono); font-size: 11px; }
+.theory { color: var(--amber); font-family: var(--mono); }
+.actual { color: var(--cyan); font-family: var(--mono); }
+.delta-badge {
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 2px;
+}
+.delta-hi { background: rgba(255,107,138,0.15); color: var(--rose); }
+.delta-ok { background: rgba(0,229,200,0.1); color: var(--cyan); }
+
+/* ─────────────── DISCUSSION ─────────────── */
+.discussion-block {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 24px;
+  margin-bottom: 16px;
+}
+.discussion-block h4 {
+  font-family: var(--serif);
+  font-size: 16px;
+  color: var(--white);
+  margin-bottom: 10px;
+}
+.discussion-block p {
+  font-size: 13px;
+  color: var(--dim);
+  line-height: 1.8;
+  margin-bottom: 8px;
+}
+.highlight { color: var(--cyan); font-family: var(--mono); font-size: 12px; }
+
+/* ─────────────── TENSIOMETER ANIMATION ─────────────── */
+.plate { animation: dip 3s ease-in-out infinite; }
+@keyframes dip {
+  0%, 100% { transform: translateY(0); }
+  45%, 55% { transform: translateY(28px); }
+}
+.liquid-meniscus { animation: meniscus 3s ease-in-out infinite; }
+@keyframes meniscus {
+  0%, 35% { d: path("M 60 90 Q 100 90 140 90"); opacity: 0; }
+  45%, 55% { d: path("M 60 90 Q 80 83 100 81 Q 120 83 140 90"); opacity: 1; }
+  75%, 100% { d: path("M 60 90 Q 100 90 140 90"); opacity: 0; }
+}
+.bubble-rise { animation: rise 2s linear infinite; }
+@keyframes rise {
+  from { transform: translateY(0); opacity: 1; }
+  to { transform: translateY(-40px); opacity: 0; }
+}
+
+/* liquid rising animation */
+.liq-rise { 
+  animation: liqRise 4s ease-in-out infinite; 
+  transform-origin: bottom;
+}
+@keyframes liqRise {
+  0%   { transform: scaleY(0.1); opacity: 0.5; }
+  40%  { transform: scaleY(0.7); opacity: 1; }
+  70%  { transform: scaleY(0.9); opacity: 1; }
+  100% { transform: scaleY(0.7); opacity: 0.8; }
+}
+
+.weight-bob { animation: weighBob 2s ease-in-out infinite; }
+@keyframes weighBob {
+  0%, 100% { transform: rotate(-1deg); }
+  50%       { transform: rotate(1deg); }
+}
+
+/* ─────────────── SCROLL FADE-IN ─────────────── */
+.fade-in {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.fade-in.visible {
+  opacity: 1;
+  transform: none;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="badge">CHF 440 · FORMULATION TECHNOLOGY · PRACTICAL 3</div>
+  <h1>The Wetting Behaviour of Powders</h1>
+  <p class="subtitle">Washburn Gravimetric Method · Wilhelmy Plate Tensiometry · Zisman Plot Analysis</p>
+</header>
+
+<div class="tab-bar">
+  <div class="tab active" onclick="switchTab('walkthrough',this)">01 · EXPERIMENT WALKTHROUGH</div>
+  <div class="tab" onclick="switchTab('calculations',this)">02 · CALCULATIONS</div>
+  <div class="tab" onclick="switchTab('zisman',this)">03 · ZISMAN PLOT</div>
+  <div class="tab" onclick="switchTab('comparison',this)">04 · THEORY vs ACTUAL</div>
+  <div class="tab" onclick="switchTab('discussion',this)">05 · DISCUSSION</div>
+</div>
+
+<!-- ============================================================
+     PANEL 1: WALKTHROUGH
+     ============================================================ -->
+<div id="walkthrough" class="panel active">
+
+  <div class="steps-grid">
+
+    <!-- STEP 1 -->
+    <div class="step-card" onclick="toggleStep(this)">
+      <div class="step-num">STEP 01</div>
+      <h3>Sodium Oleate Solution Preparation</h3>
+      <p>Prepare four serial dilutions (0.01 M → 1×10⁻⁵ M) in distilled water. Allow foam to dissipate before volumetric make-up.</p>
+      <div class="step-expand">
+        <div class="anim-box">
+          <svg viewBox="0 0 260 140" width="260" height="140" xmlns="http://www.w3.org/2000/svg">
+            <!-- Volumetric flasks -->
+            <g transform="translate(10,10)">
+              <!-- Flask 1 -->
+              <g transform="translate(20,0)">
+                <rect x="15" y="30" width="30" height="90" rx="2" fill="none" stroke="#1e2535" stroke-width="1.5"/>
+                <rect x="22" y="6" width="16" height="28" rx="1" fill="none" stroke="#1e2535" stroke-width="1.5"/>
+                <rect x="15" y="80" width="30" height="40" rx="2" fill="rgba(0,229,200,0.08)"/>
+                <rect x="15" y="86" width="30" height="34" rx="2" fill="rgba(0,229,200,0.18)"/>
+                <text x="30" y="135" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#00e5c8">0.01M</text>
+              </g>
+              <!-- Flask 2 -->
+              <g transform="translate(70,0)">
+                <rect x="15" y="30" width="30" height="90" rx="2" fill="none" stroke="#1e2535" stroke-width="1.5"/>
+                <rect x="22" y="6" width="16" height="28" rx="1" fill="none" stroke="#1e2535" stroke-width="1.5"/>
+                <rect x="15" y="85" width="30" height="35" rx="2" fill="rgba(0,229,200,0.13)"/>
+                <text x="30" y="135" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#00e5c8">0.001</text>
+              </g>
+              <!-- Flask 3 -->
+              <g transform="translate(120,0)">
+                <rect x="15" y="30" width="30" height="90" rx="2" fill="none" stroke="#1e2535" stroke-width="1.5"/>
+                <rect x="22" y="6" width="16" height="28" rx="1" fill="none" stroke="#1e2535" stroke-width="1.5"/>
+                <rect x="15" y="90" width="30" height="30" rx="2" fill="rgba(0,229,200,0.09)"/>
+                <text x="30" y="135" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#00e5c8">0.0001</text>
+              </g>
+              <!-- Flask 4 -->
+              <g transform="translate(170,0)">
+                <rect x="15" y="30" width="30" height="90" rx="2" fill="none" stroke="#1e2535" stroke-width="1.5"/>
+                <rect x="22" y="6" width="16" height="28" rx="1" fill="none" stroke="#1e2535" stroke-width="1.5"/>
+                <rect x="15" y="95" width="30" height="25" rx="2" fill="rgba(0,229,200,0.06)"/>
+                <text x="30" y="135" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#7a8398">1e-5M</text>
+              </g>
+              <!-- Arrows between -->
+              <text x="63" y="75" fill="#f5a623" font-size="14">→</text>
+              <text x="113" y="75" fill="#f5a623" font-size="14">→</text>
+              <text x="163" y="75" fill="#f5a623" font-size="14">→</text>
+            </g>
+          </svg>
+        </div>
+        <p style="font-size:12px; color:var(--dim); margin-top:8px; line-height:1.6;">Foam suppression is critical — read meniscus at the base of the foam layer, not the foam top. Serial dilution minimises accumulated weighing error.</p>
+      </div>
+    </div>
+
+    <!-- STEP 2: TENSIOMETER -->
+    <div class="step-card" onclick="toggleStep(this)">
+      <div class="step-num">STEP 02</div>
+      <h3>Krüss Tensiometer — Wilhelmy Plate Method</h3>
+      <p>A platinum Wilhelmy plate is lowered to contact the liquid surface; the wetting force is recorded by the microbalance. γ = F / (l · cos θ_plate).</p>
+      <div class="step-expand">
+        <div class="anim-box">
+          <!-- Krüss tensiometer SVG -->
+          <svg viewBox="0 0 220 160" width="220" height="160" xmlns="http://www.w3.org/2000/svg">
+            <!-- Balance arm -->
+            <line x1="50" y1="20" x2="170" y2="20" stroke="#1e2535" stroke-width="2"/>
+            <line x1="110" y1="10" x2="110" y2="22" stroke="#7a8398" stroke-width="2"/>
+            <circle cx="110" cy="10" r="4" fill="#7a8398"/>
+            <!-- Suspension wire -->
+            <line x1="110" y1="22" x2="110" y2="52" stroke="#7a8398" stroke-width="1.5" stroke-dasharray="3,2"/>
+            <!-- Wilhelmy plate (dips) -->
+            <g class="plate">
+              <rect x="98" y="52" width="24" height="36" rx="1" fill="none" stroke="#00e5c8" stroke-width="1.8"/>
+              <line x1="102" y1="55" x2="102" y2="85" stroke="rgba(0,229,200,0.3)" stroke-width="0.8"/>
+              <line x1="106" y1="55" x2="106" y2="85" stroke="rgba(0,229,200,0.3)" stroke-width="0.8"/>
+              <line x1="110" y1="55" x2="110" y2="85" stroke="rgba(0,229,200,0.3)" stroke-width="0.8"/>
+              <line x1="114" y1="55" x2="114" y2="85" stroke="rgba(0,229,200,0.3)" stroke-width="0.8"/>
+              <line x1="118" y1="55" x2="118" y2="85" stroke="rgba(0,229,200,0.3)" stroke-width="0.8"/>
+              <text x="110" y="49" text-anchor="middle" font-size="7" font-family="JetBrains Mono" fill="#00e5c8">Pt PLATE</text>
+            </g>
+            <!-- Petri dish / beaker -->
+            <rect x="62" y="100" width="96" height="46" rx="3" fill="#111520" stroke="#1e2535" stroke-width="1.5"/>
+            <rect x="62" y="112" width="96" height="34" rx="2" fill="rgba(100,180,220,0.12)"/>
+            <!-- Meniscus animation -->
+            <path class="liquid-meniscus" d="M 62 112 Q 110 112 158 112" stroke="#64b4dc" stroke-width="1.2" fill="none"/>
+            <!-- Balance display -->
+            <rect x="150" y="5" width="52" height="22" rx="2" fill="#0d1018" stroke="#1e2535"/>
+            <text x="176" y="20" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#00e5c8">γ mN/m</text>
+            <!-- Labels -->
+            <text x="12" y="90" font-family="DM Sans" font-size="8" fill="#7a8398">force</text>
+            <text x="12" y="100" font-family="DM Sans" font-size="8" fill="#7a8398">= γ·l</text>
+            <line x1="96" y1="95" x2="32" y2="95" stroke="#7a8398" stroke-width="0.8" stroke-dasharray="2,2"/>
+          </svg>
+        </div>
+        <p style="font-size:12px; color:var(--dim); margin-top:8px; line-height:1.6;">
+          The Wilhelmy equation: <span class="highlight">F = γ · P · cos θ_plate</span> where P = plate perimeter (2L+2t). For platinum at complete wetting, θ_plate ≈ 0°, so cos θ = 1 and F = γ·P. Surface tension is computed automatically by the Krüss K12 firmware.
+        </p>
+      </div>
+    </div>
+
+    <!-- STEP 3: POWDER PREP -->
+    <div class="step-card" onclick="toggleStep(this)">
+      <div class="step-num">STEP 03</div>
+      <h3>Powder Preparation &amp; Packing</h3>
+      <p>Crush each powder (mortar &amp; pestle) to remove agglomerates. Pack ~1/3 vial volume using reproducible force onto filter paper base.</p>
+      <div class="step-expand">
+        <div class="anim-box">
+          <svg viewBox="0 0 220 130" width="220" height="130" xmlns="http://www.w3.org/2000/svg">
+            <!-- Mortar -->
+            <ellipse cx="60" cy="105" rx="38" ry="8" fill="#1a1f2e" stroke="#1e2535" stroke-width="1.5"/>
+            <path d="M 22 70 Q 22 105 60 105 Q 98 105 98 70 Z" fill="#111520" stroke="#1e2535" stroke-width="1.5"/>
+            <!-- Powder in mortar -->
+            <ellipse cx="60" cy="90" rx="25" ry="6" fill="rgba(245,166,35,0.2)"/>
+            <!-- Pestle -->
+            <rect x="55" y="20" width="10" height="60" rx="3" fill="#1a1f2e" stroke="#7a8398" stroke-width="1.2"/>
+            <ellipse cx="60" cy="80" rx="8" ry="4" fill="#7a8398"/>
+            <!-- Arrow to vial -->
+            <text x="110" y="75" fill="#f5a623" font-size="18">→</text>
+            <!-- Pill vial -->
+            <rect x="135" y="20" width="42" height="90" rx="4" fill="none" stroke="#1e2535" stroke-width="1.5"/>
+            <!-- Powder in vial -->
+            <rect x="135" y="60" width="42" height="50" rx="3" fill="rgba(245,166,35,0.15)"/>
+            <!-- Filter paper base (shown inverted) -->
+            <rect x="130" y="106" width="52" height="5" rx="1" fill="rgba(255,255,255,0.08)" stroke="#7a8398" stroke-width="0.8"/>
+            <text x="156" y="122" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#7a8398">filter paper</text>
+            <text x="156" y="14" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#f5a623">INVERTED</text>
+          </svg>
+        </div>
+        <p style="font-size:12px; color:var(--dim); margin-top:8px; line-height:1.6;">Consistent packing is paramount — C is sensitive to void fraction. The vial is inverted so the filter paper base contacts the liquid, mimicking a porous sintered glass bed.</p>
+      </div>
+    </div>
+
+    <!-- STEP 4: HEXANE C DETERMINATION -->
+    <div class="step-card" onclick="toggleStep(this)">
+      <div class="step-num">STEP 04</div>
+      <h3>Material Constant C — Hexane Reference</h3>
+      <p>Since hexane (γ = 17.9 mN/m) completely wets both powders, θ = 0° and cos θ = 1, allowing direct solution for C. Immerse 60 s, record Δm.</p>
+      <div class="step-expand">
+        <div class="anim-box">
+          <!-- Liquid absorption animation -->
+          <svg viewBox="0 0 240 140" width="240" height="140" xmlns="http://www.w3.org/2000/svg">
+            <!-- Petri dish -->
+            <rect x="30" y="90" width="180" height="40" rx="4" fill="#111520" stroke="#1e2535" stroke-width="1.5"/>
+            <rect x="30" y="100" width="180" height="30" rx="3" fill="rgba(255,200,100,0.1)"/>
+            <text x="120" y="120" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#f5a623">n-HEXANE</text>
+            <!-- Inverted vial -->
+            <rect x="90" y="20" width="60" height="72" rx="4" fill="#111520" stroke="#1e2535" stroke-width="1.5"/>
+            <!-- Powder particles -->
+            <g fill="rgba(200,200,200,0.3)">
+              <circle cx="105" cy="35" r="3"/>
+              <circle cx="115" cy="30" r="2.5"/>
+              <circle cx="125" cy="38" r="3"/>
+              <circle cx="135" cy="33" r="2"/>
+              <circle cx="110" cy="44" r="2.5"/>
+              <circle cx="130" cy="45" r="3"/>
+              <circle cx="120" cy="50" r="2"/>
+            </g>
+            <!-- Rising liquid in vial -->
+            <rect class="liq-rise" x="90" y="20" width="60" height="72" rx="4" fill="rgba(255,200,100,0.13)" style="transform-origin: 120px 92px;"/>
+            <!-- Filter paper -->
+            <rect x="85" y="89" width="70" height="5" fill="rgba(255,255,255,0.08)" stroke="#7a8398" stroke-width="0.8"/>
+            <!-- Absorption arrows -->
+            <line x1="105" y1="94" x2="105" y2="78" stroke="#f5a623" stroke-width="1" marker-end="url(#arr1)" stroke-dasharray="3,2"/>
+            <line x1="120" y1="94" x2="120" y2="78" stroke="#f5a623" stroke-width="1" stroke-dasharray="3,2"/>
+            <line x1="135" y1="94" x2="135" y2="78" stroke="#f5a623" stroke-width="1" stroke-dasharray="3,2"/>
+            <!-- Clock -->
+            <circle cx="200" cy="45" r="22" fill="none" stroke="#1e2535" stroke-width="2"/>
+            <line x1="200" y1="45" x2="200" y2="28" stroke="#00e5c8" stroke-width="2"/>
+            <line x1="200" y1="45" x2="214" y2="53" stroke="#7a8398" stroke-width="1.5"/>
+            <text x="200" y="75" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#00e5c8">t = 60 s</text>
+          </svg>
+        </div>
+        <div class="eq-box">m² = [C · ρ² · γ · cosθ / η] · t</div>
+        <p style="font-size:12px; color:var(--dim); line-height:1.6;">With θ = 0°, C = m²·η / (ρ²·γ·t). This material constant encodes pore geometry and packing density — it must remain constant between hexane and surfactant runs.</p>
+      </div>
+    </div>
+
+    <!-- STEP 5: SURFACTANT WETTING -->
+    <div class="step-card" onclick="toggleStep(this)">
+      <div class="step-num">STEP 05</div>
+      <h3>Contact Angle Measurement — Surfactant Series</h3>
+      <p>Repeat absorption experiment with each sodium oleate solution. Use experimentally measured γ and solve for θ using the previously determined C.</p>
+      <div class="step-expand">
+        <div class="anim-box">
+          <svg viewBox="0 0 240 130" width="240" height="130" xmlns="http://www.w3.org/2000/svg">
+            <!-- Balance -->
+            <rect x="80" y="10" width="80" height="30" rx="3" fill="#111520" stroke="#1e2535" stroke-width="1.5"/>
+            <text x="120" y="30" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#00e5c8">1.247 g</text>
+            <!-- Vial on filter paper on balance -->
+            <g class="weight-bob" style="transform-origin: 120px 50px;">
+              <rect x="95" y="40" width="50" height="65" rx="4" fill="#111520" stroke="#1e2535" stroke-width="1.5"/>
+              <!-- Liquid in vial -->
+              <rect x="95" y="70" width="50" height="35" rx="3" fill="rgba(0,229,200,0.12)"/>
+              <rect x="90" y="103" width="60" height="4" fill="rgba(255,255,255,0.06)" stroke="#7a8398" stroke-width="0.8"/>
+            </g>
+            <!-- Annotation -->
+            <text x="165" y="60" font-family="JetBrains Mono" font-size="8" fill="#7a8398">mf</text>
+            <text x="165" y="75" font-family="JetBrains Mono" font-size="8" fill="#7a8398">Δm=mf-mi</text>
+            <!-- Arrow to calculation -->
+            <text x="165" y="100" font-family="JetBrains Mono" font-size="18" fill="#f5a623">↓</text>
+            <text x="165" y="118" font-family="JetBrains Mono" font-size="8" fill="#00e5c8">cos θ</text>
+          </svg>
+        </div>
+        <p style="font-size:12px; color:var(--dim); margin-top:8px; line-height:1.6;">Four concentrations of sodium oleate → four surface tensions → four contact angles per powder. Combined with tensiometer γ data, the Zisman plot can be constructed.</p>
+      </div>
+    </div>
+
+    <!-- STEP 6: ZISMAN PLOT -->
+    <div class="step-card" onclick="toggleStep(this)">
+      <div class="step-num">STEP 06</div>
+      <h3>Zisman Plot &amp; Critical Surface Tension γ<sub>c</sub></h3>
+      <p>Plot θ (y) vs. γ (x) for each powder. Extrapolate the linear fit to θ = 0° — this x-intercept defines the critical surface tension γ<sub>c</sub>.</p>
+      <div class="step-expand">
+        <div class="anim-box">
+          <svg viewBox="0 0 220 130" width="220" height="130" xmlns="http://www.w3.org/2000/svg">
+            <!-- Axes -->
+            <line x1="30" y1="10" x2="30" y2="110" stroke="#1e2535" stroke-width="1.5"/>
+            <line x1="30" y1="110" x2="200" y2="110" stroke="#1e2535" stroke-width="1.5"/>
+            <!-- Grid lines -->
+            <line x1="30" y1="60" x2="200" y2="60" stroke="#161c28" stroke-width="1"/>
+            <!-- Axis labels -->
+            <text x="110" y="128" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#7a8398">Surface Tension γ (mN/m)</text>
+            <text x="12" y="65" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#7a8398" transform="rotate(-90, 12, 65)">θ (°)</text>
+            <!-- Powder 1 line (steep, pos slope) -->
+            <line x1="30" y1="40" x2="200" y2="95" stroke="#00e5c8" stroke-width="1.8" stroke-dasharray="4,2"/>
+            <!-- Powder 2 line (different slope) -->
+            <line x1="30" y1="55" x2="200" y2="80" stroke="#f5a623" stroke-width="1.8" stroke-dasharray="4,2"/>
+            <!-- Data points P1 -->
+            <circle cx="75" cy="62" r="4" fill="#00e5c8"/>
+            <circle cx="80" cy="59" r="4" fill="#00e5c8"/>
+            <circle cx="128" cy="72" r="4" fill="#00e5c8"/>
+            <circle cx="170" cy="82" r="4" fill="#00e5c8"/>
+            <!-- Data points P2 -->
+            <circle cx="75" cy="75" r="4" fill="#f5a623"/>
+            <circle cx="80" cy="66" r="4" fill="#f5a623"/>
+            <circle cx="128" cy="74" r="4" fill="#f5a623"/>
+            <circle cx="170" cy="70" r="4" fill="#f5a623"/>
+            <!-- Legend -->
+            <circle cx="35" cy="18" r="3" fill="#00e5c8"/>
+            <text x="42" y="21" font-family="JetBrains Mono" font-size="7" fill="#00e5c8">Powder 1 (Flour)</text>
+            <circle cx="35" cy="28" r="3" fill="#f5a623"/>
+            <text x="42" y="31" font-family="JetBrains Mono" font-size="7" fill="#f5a623">Powder 2 (TiO₂/ZnO)</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end steps-grid -->
+</div>
+
+<!-- ============================================================
+     PANEL 2: CALCULATIONS
+     ============================================================ -->
+<div id="calculations" class="panel">
+
+  <div class="data-section fade-in">
+    <h2>Material Constant C — Hexane Reference</h2>
+    <p class="section-note">η<sub>hexane</sub> = 0.300 mPa·s · ρ = 0.659 g/mL · γ = 17.900 mN/m · cosθ = 1 · t = 60 s</p>
+    <div class="eq-box">C = m² · η / (ρ² · γ · cos θ · t)</div>
+    <table>
+      <thead>
+        <tr>
+          <th>POWDER</th><th>TYPE</th><th>t (s)</th><th>Δm (g)</th><th>m² (g²)</th><th>C (mL²/m)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="tag-p1">Powder 1</span></td>
+          <td style="color:var(--dim)">Rice/Potato Flour</td>
+          <td>60</td><td>1.24</td><td class="val-amber">1.5376</td>
+          <td class="val-cyan">9.89 × 10⁻⁴</td>
+        </tr>
+        <tr>
+          <td><span class="tag-p2">Powder 2</span></td>
+          <td style="color:var(--dim)">TiO₂ / ZnO</td>
+          <td>60</td><td>1.07</td><td class="val-amber">1.1449</td>
+          <td class="val-cyan">7.36 × 10⁻⁴</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="data-section fade-in">
+    <h2>Tensiometry — Sodium Oleate Surface Tensions</h2>
+    <p class="section-note">Wilhelmy plate · Krüss K12 · η<sub>solutions</sub> ≈ η<sub>water</sub> = 1.00 mPa·s · ρ = 1.00 g/mL</p>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th><th>CONC (M)</th><th>γ (mN/m)</th><th>TEMP (°C)</th>
+          <th>Δm P1 (g)</th><th>Δm P2 (g)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>1</td><td>0.01</td><td class="val-cyan">25.0</td><td>25.4</td><td>0.54</td><td>0.38</td></tr>
+        <tr><td>2</td><td>0.001</td><td class="val-cyan">25.9</td><td>25.2</td><td>0.61</td><td>0.60</td></tr>
+        <tr><td>3</td><td>0.0001</td><td class="val-cyan">37.6</td><td>25.1</td><td>0.65</td><td>0.51</td></tr>
+        <tr><td>4</td><td>1×10⁻⁵</td><td class="val-cyan">48.8</td><td>25.0</td><td>0.52</td><td>0.76</td></tr>
+        <tr><td>—</td><td>Water (ref)</td><td class="val-cyan">60.5</td><td>25.0</td><td>—</td><td>—</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="data-section fade-in">
+    <h2>Calculated Contact Angles θ</h2>
+    <p class="section-note">cos θ = m² · η / (C · ρ² · γ · t) — solved from Washburn equation using experimentally determined C</p>
+    <div class="eq-box">cos θ = m² · η / (C · ρ² · γ · t)  →  θ = arccos(cos θ)</div>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th><th>CONC (M)</th><th>γ (mN/m)</th>
+          <th>cosθ P1</th><th>θ P1 (°)</th>
+          <th>cosθ P2</th><th>θ P2 (°)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td><td>0.01</td><td>25.0</td>
+          <td>0.1966</td><td class="val-cyan">78.7°</td>
+          <td>0.1307</td><td class="val-amber">82.5°</td>
+        </tr>
+        <tr>
+          <td>2</td><td>0.001</td><td>25.9</td>
+          <td>0.2421</td><td class="val-cyan">76.0°</td>
+          <td>0.3146</td><td class="val-amber">71.7°</td>
+        </tr>
+        <tr>
+          <td>3</td><td>0.0001</td><td>37.6</td>
+          <td>0.1894</td><td class="val-cyan">79.1°</td>
+          <td>0.1566</td><td class="val-amber">81.0°</td>
+        </tr>
+        <tr>
+          <td>4</td><td>1×10⁻⁵</td><td>48.8</td>
+          <td>0.0934</td><td class="val-cyan">84.6°</td>
+          <td>0.2679</td><td class="val-amber">74.5°</td>
+        </tr>
+      </tbody>
+    </table>
+    <p style="font-size:12px; color:var(--dim); margin-top:12px; line-height:1.8;">
+      All contact angles fall in the <span class="highlight">71° – 85°</span> range — classified as <em>partial wetting</em> (θ between 0° and 90°), but approaching the negligible-wetting boundary. Both powders show poor spontaneous wettability with the sodium oleate series, an unexpected result discussed in Panel 05.
+    </p>
+  </div>
+
+</div>
+
+<!-- ============================================================
+     PANEL 3: ZISMAN PLOT
+     ============================================================ -->
+<div id="zisman" class="panel">
+
+  <div class="data-section">
+    <h2>Zisman Plot — cos θ vs. Surface Tension γ</h2>
+    <p class="section-note">Linear regression extrapolated to cosθ = 1 (θ = 0°) defines γ<sub>c</sub> · χ² regression displayed · actual data shown as filled markers</p>
+
+    <div class="chart-wrap">
+      <canvas id="zismanChart"></canvas>
+      <div class="chart-legend">
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#00e5c8;"></div>
+          Powder 1 (Flour) — data
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:rgba(0,229,200,0.3); border: 1px dashed #00e5c8;"></div>
+          Powder 1 — linear fit
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#f5a623;"></div>
+          Powder 2 (TiO₂/ZnO) — data
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:rgba(245,166,35,0.3); border: 1px dashed #f5a623;"></div>
+          Powder 2 — linear fit
+        </div>
+      </div>
+    </div>
+
+    <div style="background:var(--panel); border:1px solid var(--border); border-radius:4px; padding:18px; margin-top:20px;">
+      <h4 style="font-family:var(--serif); color:var(--white); font-size:15px; margin-bottom:12px;">Regression Equations</h4>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+        <div>
+          <div class="eq-box" style="font-size:11px;">P1: cos θ = −0.00503·γ + 0.3529</div>
+          <p style="font-size:12px; color:var(--dim); line-height:1.7;">Slope: −5.03 × 10⁻³ (mN/m)⁻¹<br>
+          R² = 0.63 · Negative slope = expected (higher γ → less wetting)<br>
+          γ<sub>c</sub> extrapolated: <span class="val-rose">−128.7 mN/m</span> (non-physical → see discussion)</p>
+        </div>
+        <div>
+          <div class="eq-box" style="font-size:11px; border-left-color:var(--amber);">P2: cos θ = +0.00138·γ + 0.1702</div>
+          <p style="font-size:12px; color:var(--dim); line-height:1.7;">Slope: +1.38 × 10⁻³ (mN/m)⁻¹<br>
+          R² = 0.06 · Positive slope → scatter-dominated, no clear trend<br>
+          γ<sub>c</sub> extrapolated: <span class="val-rose">+602.5 mN/m</span> (non-physical → see discussion)</p>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:var(--panel); border:1px solid var(--border); border-radius:4px; padding:18px; margin-top:16px;">
+      <h4 style="font-family:var(--serif); color:var(--white); font-size:15px; margin-bottom:10px;">θ vs γ Plot (Alternate Representation)</h4>
+      <div class="chart-wrap" style="margin-top:0; border:none; padding:0;">
+        <canvas id="thetaChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     PANEL 4: THEORY vs ACTUAL
+     ============================================================ -->
+<div id="comparison" class="panel">
+  <div class="data-section">
+    <h2>Theoretical vs. Actual Results</h2>
+    <p class="section-note">Literature values from Binks (2002), Marmur (2003), and manufacturer TDS for TiO₂ (Evonik Aeroxide) and starch (native/modified)</p>
+
+    <div class="compare-grid">
+      <div class="compare-card">
+        <h4>Powder 1 — Rice/Potato Starch Flour</h4>
+        <div class="compare-row">
+          <span class="compare-label">γ<sub>c</sub> (Literature)</span>
+          <span class="theory">30–36 mN/m</span>
+        </div>
+        <div class="compare-row">
+          <span class="compare-label">γ<sub>c</sub> (Experimental)</span>
+          <span class="actual">Non-determinable*</span>
+          <span class="delta-badge delta-hi">EXTRAPOLATION FAIL</span>
+        </div>
+        <div class="compare-row">
+          <span class="compare-label">θ with water (Literature)</span>
+          <span class="theory">~50–60°</span>
+        </div>
+        <div class="compare-row">
+          <span class="compare-label">θ at γ=25 mN/m (Theory)</span>
+          <span class="theory">~20–35°</span>
+        </div>
+        <div class="compare-row">
+          <span class="compare-label">θ at γ=25 mN/m (Actual)</span>
+          <span class="actual">78.7°</span>
+          <span class="delta-badge delta-hi">Δ ~45°</span>
+        </div>
+        <div class="compare-row">
+          <span class="compare-label">θ at γ=48.8 mN/m (Theory)</span>
+          <span class="theory">~55–65°</span>
+        </div>
+        <div class="compare-row">
+          <span class="compare-label">θ at γ=48.8 mN/m (Actual)</span>
+          <span class="actual">84.6°</span>
+          <span class="delta-badge delta-hi">Δ ~25°</span>
+        </div>
+        <div class="compare-row">
+          <span class="compare-label">Wettability Classification</span>
+          <span class="theory">Moderate (hydrophilic)</span>
+        </div>
+        <div class="compare-row">
+          <span class="compare-label">Actual Classification</span>
+          <span class="actual">Poor/partial wetting</span>
+          <span class="delta-badge delta-hi">MISMATCH</span>
+        </div>
+      </div>
+
+      <div class="compare-card">
+        <h4>Powder 2 — TiO₂ / ZnO</h4>
+        <div class="compare-row">
+          <span class="compare-label">γ<sub>c</sub> TiO₂ (Literature)</span>
+          <span class="theory">40–55 mN/m</span>
+        </div>
+        <div class="compare-row">
+          <span class="compare-label">γ<sub>c</sub> ZnO (Literature)</span>
+          <span class="theory">35–47 mN/m</span>
+        </div>
+        <div class="compare-row">
+          <span class="compare-label">γ<sub>c</sub> (Experimental)</span>
+          <span class="actual">Non-determinable*</span>
+          <span class="delta-badge delta-hi">EXTRAPOLATION FAIL</span>
+        </div>
+        <div class="compare-row">
+          <span class="compare-label">θ with water (Uncoated TiO₂)</span>
+          <span class="theory">~20–40°</span>
+        </div>
+        <div class="compare-row">
+          <span class="compare-label">θ at γ=25 mN/m (Theory)</span>
+          <span class="theory">~5–20°</span>
+        </div>
+        <div class="compare-row">
+          <span class="compare-label">θ at γ=25 mN/m (Actual)</span>
+          <span class="actual">82.5°</span>
+          <span class="delta-badge delta-hi">Δ ~70°</span>
+        </div>
+        <div class="compare-row">
+          <span class="compare-label">Non-monotonic scatter</span>
+          <span class="actual">Yes (71°–82°)</span>
+          <span class="delta-badge delta-hi">HIGH VARIANCE</span>
+        </div>
+        <div class="compare-row">
+          <span class="compare-label">Expected Zisman monotonicity</span>
+          <span class="theory">Decreasing θ with ↓γ</span>
+        </div>
+        <div class="compare-row">
+          <span class="compare-label">Actual trend P2</span>
+          <span class="actual">Non-monotonic</span>
+          <span class="delta-badge delta-hi">UNEXPECTED</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:24px;">
+      <h3 style="font-family:var(--serif); color:var(--white); font-size:18px; margin-bottom:16px;">Which Powder has Better Wettability?</h3>
+      <table>
+        <thead>
+          <tr><th>METRIC</th><th>POWDER 1 (Flour)</th><th>POWDER 2 (TiO₂/ZnO)</th><th>WINNER</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Mean θ (all solutions)</td>
+            <td class="val-cyan">79.6°</td>
+            <td class="val-amber">77.4°</td>
+            <td style="color:#00e5c8;">P2 (marginally lower θ)</td>
+          </tr>
+          <tr>
+            <td>Mean cosθ</td>
+            <td class="val-cyan">0.180</td>
+            <td class="val-amber">0.215</td>
+            <td style="color:#00e5c8;">P2</td>
+          </tr>
+          <tr>
+            <td>C value (higher = more porous)</td>
+            <td class="val-cyan">9.89×10⁻⁴</td>
+            <td class="val-amber">7.36×10⁻⁴</td>
+            <td style="color:#00e5c8;">P1 (more porous)</td>
+          </tr>
+          <tr>
+            <td>Mass absorption (hexane)</td>
+            <td class="val-cyan">1.24 g</td>
+            <td class="val-amber">1.07 g</td>
+            <td style="color:#00e5c8;">P1</td>
+          </tr>
+          <tr>
+            <td>Trend consistency (Zisman)</td>
+            <td class="val-cyan">Weak negative slope</td>
+            <td class="val-rose">No clear trend</td>
+            <td style="color:#00e5c8;">P1</td>
+          </tr>
+        </tbody>
+      </table>
+      <p style="font-size:12px; color:var(--dim); margin-top:10px; line-height:1.8;">
+        Based on the <em>mean cosθ</em>, <span class="highlight">Powder 2</span> shows marginally better wettability by the sodium oleate solutions (higher cosθ = lower contact angle). However, the lack of trend consistency and high scatter for Powder 2 undermines confidence — both powders are poorly wetted under these experimental conditions.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     PANEL 5: DISCUSSION
+     ============================================================ -->
+<div id="discussion" class="panel">
+
+  <div class="discussion-block fade-in">
+    <h4>1. Why are all contact angles unexpectedly high (>70°)?</h4>
+    <p>
+      Both theoretical predictions and Washburn literature for native starch (γ<sub>c</sub> ≈ 30–36 mN/m) and bare TiO₂ (γ<sub>c</sub> ≈ 40–55 mN/m) suggest contact angles of <span class="highlight">20–60°</span> with surfactant solutions at γ = 25–50 mN/m. The obtained values of 71°–85° significantly exceed these. Primary explanation: <strong>surface hydrophobisation</strong>. Cosmetic-grade TiO₂ and ZnO are routinely coated with dimethicone, stearic acid, or alumina for dispersibility — these coatings reduce surface free energy dramatically (Evonik Aeroxide T 805, for example, has θ ≈ 95–130° with water). For the flour, lipid content and protein coat on starch granules increase hydrophobicity relative to pure starch.
+    </p>
+    <p>
+      Additionally, <strong>particle swelling</strong> in starch is a confounding factor — as water enters, granule swelling alters pore geometry, violating the constant-C assumption and inflating apparent θ values (Holmberg et al., <em>Surfactants and Polymers in Aqueous Solution</em>, 2003).
+    </p>
+  </div>
+
+  <div class="discussion-block fade-in">
+    <h4>2. Why does the Zisman extrapolation fail (non-physical γ<sub>c</sub>)?</h4>
+    <p>
+      Zisman analysis requires a monotonic <span class="highlight">decrease in cosθ as γ<sub>L</sub> increases</span>, producing a linear trend that can be extrapolated to cosθ = 1 within the physical γ range. For Powder 1, the cosθ values are compressed (0.09–0.24) with no clear gradient across the narrow surface tension window tested (25–49 mN/m). For Powder 2, the non-monotonic scatter (cosθ oscillates) likely reflects inconsistent packing — C varies between runs, invalidating the core assumption of the Washburn method.
+    </p>
+    <p>
+      A more reliable Zisman plot would require liquids spanning a wider γ range, e.g., including <span class="highlight">n-hexane (17.9), diiodomethane (50.8), formamide (57.0), water (72.8) mN/m</span> — the standard Owens–Wendt series — rather than surfactant dilutions of water alone.
+    </p>
+  </div>
+
+  <div class="discussion-block fade-in">
+    <h4>3. Material constant C — validity and errors</h4>
+    <p>
+      C is a geometric packing constant encoding pore radius distribution and tortuosity. Variation in C between powder packing replicates is the dominant source of error in student Washburn experiments. Even small differences in tamping force (±10%) can alter C by 20–30%, propagating directly to contact angle error via <span class="highlight">∂θ/∂C ∝ 1/sinθ</span> — which is large near θ = 90°. The non-reproducibility of Powder 2 (TiO₂/ZnO) is consistent with a denser, less compressible particle system where packing is harder to control manually.
+    </p>
+  </div>
+
+  <div class="discussion-block fade-in">
+    <h4>4. Washburn theory — other influencing factors</h4>
+    <p>
+      Beyond packing, the Washburn model assumes: (i) rigid, non-swelling pores; (ii) Newtonian liquid; (iii) no adsorption of surfactant onto pore walls during the absorption window. Sodium oleate is a reactive surfactant that adsorbs onto TiO₂ and ZnO surfaces via carboxylate–metal coordination within seconds. This <strong>dynamic contact angle</strong> effect — adsorption changing θ in real-time — means the measured θ is an average over an evolving adsorption process, not a true equilibrium contact angle. Ideally, a non-reactive, completely wetting reference liquid series (e.g., n-alkanes) should be used.
+    </p>
+  </div>
+
+  <div class="discussion-block fade-in">
+    <h4>5. Formulation relevance — cosmetic pigment wettability</h4>
+    <p>
+      In the context of a <span class="highlight">colour-changing foundation system</span> (e.g., Tagra CameleonCaps™ in an O/W base), pigment wettability governs dispersion stability, colour development, and skin adhesion. A high θ for TiO₂ in aqueous media confirms why cosmetic TiO₂ requires surface treatment and appropriate dispersants (e.g., polyhydroxystearic acid in W/O, or Tween 80 in O/W). The finding that θ &gt; 70° across the sodium oleate series suggests sodium oleate alone is insufficient as a wetting agent for these inorganic powders — a <strong>mixed surfactant system</strong> or polymer dispersant (e.g., Carbopol + polysorbate 60) would reduce θ more effectively for cosmetic emulsion applications.
+    </p>
+  </div>
+
+</div>
+
+<!-- ============================================================
+     JS
+     ============================================================ -->
+<script>
+// Tab switching
+function switchTab(id, el) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  el.classList.add('active');
+  if (id === 'zisman') { setTimeout(initCharts, 50); }
+  triggerFadeIn();
+}
+
+// Step toggle
+function toggleStep(card) {
+  const isOpen = card.classList.contains('open');
+  document.querySelectorAll('.step-card.open').forEach(c => c.classList.remove('open'));
+  if (!isOpen) card.classList.add('open');
+}
+
+// Fade-in on scroll
+function triggerFadeIn() {
+  const els = document.querySelectorAll('.fade-in:not(.visible)');
+  els.forEach((el, i) => {
+    setTimeout(() => { el.classList.add('visible'); }, i * 100);
+  });
+}
+triggerFadeIn();
+
+// ─── CHARTS ───
+let chartsInit = false;
+function initCharts() {
+  if (chartsInit) return;
+  chartsInit = true;
+
+  const gamma  = [25.0, 25.9, 37.6, 48.8];
+  const cosP1  = [0.1966, 0.2421, 0.1894, 0.0934];
+  const cosP2  = [0.1307, 0.3146, 0.1566, 0.2679];
+  const thetaP1 = [78.7, 76.0, 79.1, 84.6];
+  const thetaP2 = [82.5, 71.7, 81.0, 74.5];
+
+  // Fit lines
+  const fitX = [20, 22, 55];
+  const fitY1 = fitX.map(x => -0.00503*x + 0.3529);
+  const fitY2 = fitX.map(x =>  0.00138*x + 0.1702);
+
+  // Zisman (cosθ vs γ)
+  const ctx1 = document.getElementById('zismanChart').getContext('2d');
+  new Chart(ctx1, {
+    type: 'scatter',
+    data: {
+      datasets: [
+        {
+          label: 'Powder 1 – data',
+          data: gamma.map((g,i)=>({x:g, y:cosP1[i]})),
+          backgroundColor: '#00e5c8',
+          pointRadius: 7,
+          pointHoverRadius: 9,
+        },
+        {
+          label: 'Powder 1 – fit',
+          data: fitX.map((x,i)=>({x, y:fitY1[i]})),
+          type: 'line',
+          borderColor: 'rgba(0,229,200,0.35)',
+          borderDash: [5,4],
+          borderWidth: 1.5,
+          pointRadius: 0,
+          fill: false,
+        },
+        {
+          label: 'Powder 2 – data',
+          data: gamma.map((g,i)=>({x:g, y:cosP2[i]})),
+          backgroundColor: '#f5a623',
+          pointRadius: 7,
+          pointHoverRadius: 9,
+        },
+        {
+          label: 'Powder 2 – fit',
+          data: fitX.map((x,i)=>({x, y:fitY2[i]})),
+          type: 'line',
+          borderColor: 'rgba(245,166,35,0.35)',
+          borderDash: [5,4],
+          borderWidth: 1.5,
+          pointRadius: 0,
+          fill: false,
+        },
+        {
+          label: 'cosθ = 1 (γc)',
+          data: [{x:20,y:1},{x:55,y:1}],
+          type: 'line',
+          borderColor: 'rgba(255,107,138,0.4)',
+          borderWidth: 1,
+          borderDash: [2,4],
+          pointRadius: 0,
+          fill: false,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          labels: { color:'#7a8398', font:{family:'JetBrains Mono', size:10}, boxWidth:10 }
+        },
+        tooltip: {
+          backgroundColor:'#111520',
+          borderColor:'#1e2535',
+          borderWidth:1,
+          titleColor:'#00e5c8',
+          bodyColor:'#d8dde8',
+          callbacks: {
+            label: ctx => `γ=${ctx.parsed.x} mN/m, cosθ=${ctx.parsed.y.toFixed(4)}`
+          }
+        }
+      },
+      scales: {
+        x: {
+          title: { display:true, text:'Surface Tension γ (mN/m)', color:'#7a8398', font:{family:'JetBrains Mono',size:10} },
+          grid: { color:'#161c28' },
+          ticks: { color:'#7a8398', font:{family:'JetBrains Mono',size:10} },
+          min: 20, max: 55
+        },
+        y: {
+          title: { display:true, text:'cos θ', color:'#7a8398', font:{family:'JetBrains Mono',size:10} },
+          grid: { color:'#161c28' },
+          ticks: { color:'#7a8398', font:{family:'JetBrains Mono',size:10} },
+          min: 0, max: 1.1
+        }
+      }
+    }
+  });
+
+  // θ vs γ
+  const ctx2 = document.getElementById('thetaChart').getContext('2d');
+  new Chart(ctx2, {
+    type: 'scatter',
+    data: {
+      datasets: [
+        {
+          label: 'Powder 1 θ',
+          data: gamma.map((g,i)=>({x:g, y:thetaP1[i]})),
+          backgroundColor: '#00e5c8',
+          pointRadius: 7,
+        },
+        {
+          label: 'Powder 2 θ',
+          data: gamma.map((g,i)=>({x:g, y:thetaP2[i]})),
+          backgroundColor: '#f5a623',
+          pointRadius: 7,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          labels: { color:'#7a8398', font:{family:'JetBrains Mono', size:10}, boxWidth:10 }
+        },
+        tooltip: {
+          backgroundColor:'#111520',
+          borderColor:'#1e2535',
+          borderWidth:1,
+          titleColor:'#00e5c8',
+          bodyColor:'#d8dde8',
+          callbacks: {
+            label: ctx => `γ=${ctx.parsed.x} mN/m, θ=${ctx.parsed.y.toFixed(1)}°`
+          }
+        }
+      },
+      scales: {
+        x: {
+          title: { display:true, text:'Surface Tension γ (mN/m)', color:'#7a8398', font:{family:'JetBrains Mono',size:10} },
+          grid: { color:'#161c28' },
+          ticks: { color:'#7a8398', font:{family:'JetBrains Mono',size:10} },
+          min: 20, max: 55
+        },
+        y: {
+          title: { display:true, text:'Contact Angle θ (°)', color:'#7a8398', font:{family:'JetBrains Mono',size:10} },
+          grid: { color:'#161c28' },
+          ticks: { color:'#7a8398', font:{family:'JetBrains Mono',size:10} },
+          min: 60, max: 92
+        }
+      }
+    }
+  });
+}
+
+// Open first step card
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.step-card')[0].classList.add('open');
+  triggerFadeIn();
+});
+</script>
+
+</body>
+</html>
